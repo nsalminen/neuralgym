@@ -147,11 +147,15 @@ class DataFromFNames(Dataset):
                 # self._queue.size(), dtypes.float32) * (1. / capacity))
 
     def read_img(self, filename):
-        img = cv2.imread(filename)
+        img = cv2.imread(filename, cv2.IMREAD_UNCHANGED)
         if img is None:
             print('image is None, sleep this thread for 0.1s.')
             time.sleep(0.1)
             return img, True
+        elif img.shape[2] == 4:
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA)
+        elif img.shape[2] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.fn_preprocess:
             img = self.fn_preprocess(img)
         return img, False
