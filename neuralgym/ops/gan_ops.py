@@ -1,6 +1,7 @@
 import tensorflow as tf
 from keras import backend as K
 from keras import Model
+import numpy as np
 
 from .summary_ops import scalar_summary
 
@@ -86,11 +87,10 @@ def gan_identity_loss(FLAGS, complete, ref, model):
     with tf.variable_scope("identity_loss"):
         def preprocess_input(x):
             x_resize = tf.image.resize_images(x, [224, 224])
-            x_resize = x_resize[..., ::-1]
-            x_resize[..., 0] -= 91.4953
-            x_resize[..., 1] -= 103.8827
-            x_resize[..., 2] -= 131.0912
-            return x_resize
+            vggface_mean = tf.constant([-91.4953, -103.8827, -131.0912])
+            x_resize = x_resize[..., ::-1]  # RGB to BGR
+            x_preprocessed = x_resize + vggface_mean
+            return x_preprocessed
 
         batch_similarity = 0.0
 
