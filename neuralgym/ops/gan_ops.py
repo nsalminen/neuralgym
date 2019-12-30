@@ -97,9 +97,9 @@ def gan_identity_loss(FLAGS, complete, ref, model):
         real_feat55, real_feat28, real_feat7 = model(preprocess_input(complete))
         fake_feat55, fake_feat28, fake_feat7 = model(preprocess_input(ref))
 
-        batch_similarity += FLAGS.identity_loss_alpha[0] * K.mean(K.square(fake_feat7 - real_feat7))
-        batch_similarity += FLAGS.identity_loss_alpha[1] * K.mean(K.square(fake_feat28 - real_feat28))
-        batch_similarity += FLAGS.identity_loss_alpha[2] * K.mean(K.square(fake_feat55 - real_feat55))
+        batch_similarity += FLAGS.identity_layer_weight[0] * K.mean(K.square(fake_feat7 - real_feat7))
+        batch_similarity += FLAGS.identity_layer_weight[1] * K.mean(K.square(fake_feat28 - real_feat28))
+        batch_similarity += FLAGS.identity_layer_weight[2] * K.mean(K.square(fake_feat55 - real_feat55))
 
         return FLAGS.identity_loss_alpha * tf.reduce_mean(batch_similarity)
 
