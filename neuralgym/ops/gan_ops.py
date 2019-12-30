@@ -82,24 +82,27 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def identity_loss(FLAGS, complete, ref, model):
+def gan_identity_loss(FLAGS, complete, ref, model):
     with tf.variable_scope("identity_loss"):
+        def preprocess_input(x):
+            x_resize = tf.image.resize_images(x, [224, 224])
+            x_resize = x_resize[..., ::-1]
+            x_resize[..., 0] -= 91.4953
+            x_resize[..., 1] -= 103.8827
+            x_resize[..., 2] -= 131.0912
+            return x_resize
+
         batch_similarity = 0.0
-        model.trainable = False
-        out_size55 = model.layers[36].output
-        out_size28 = model.layers[78].output
-        out_size7 = model.layers[-2].output
-        identity_features = Model(model.input, [out_size55, out_size28, out_size7])
-        identity_features.trainable = False
 
-        real_feat55, real_feat28, real_feat7 = identity_features(complete)
-        fake_feat55, fake_feat28, fake_feat7 = identity_features(ref)
+        real_feat55, real_feat28, real_feat7 = model(preprocess_input(complete))
+        fake_feat55, fake_feat28, fake_feat7 = model(preprocess_input(ref))
 
-        batch_similarity += FLAGS.identity_loss_alpha * K.mean(K.abs(fake_feat7 - real_feat7))
-        batch_similarity += FLAGS.identity_loss_alpha * K.mean(K.abs(fake_feat28 - real_feat28))
-        batch_similarity += FLAGS.identity_loss_alpha * K.mean(K.abs(fake_feat55 - real_feat55))
+        batch_similarity += FLAGS.identity_loss_alpha[0] * K.mean(K.square(fake_feat7 - real_feat7))
+        batch_similarity += FLAGS.identity_loss_alpha[1] * K.mean(K.square(fake_feat28 - real_feat28))
+        batch_similarity += FLAGS.identity_loss_alpha[2] * K.mean(K.square(fake_feat55 - real_feat55))
 
-        return FLAGS.identity_loss_alpha * tf.reduce_mean(tf.abs(batch_similarity / FLAGS.batch_size))
+        return FLAGS.identity_loss_alpha * tf.reduce_mean(batch_similarity)
+
 
 def random_interpolates(x, y, alpha=None, dtype=tf.float32):
     """
