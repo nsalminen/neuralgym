@@ -86,8 +86,9 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
 def gan_identity_loss(FLAGS, complete, ref, model):
     with tf.variable_scope("identity_loss"):
         def preprocess_input(x):
+            x = (x + 1.) * 127.5  # Normalize to 0...255
             x_resize = tf.image.resize_images(x, [224, 224])
-            vggface_mean = tf.constant([-(91.4953 / 127.5 - 1.), -(103.8827 / 127.5 - 1.), -(131.0912 / 127.5 - 1.)])
+            vggface_mean = tf.constant([-91.4953, -103.8827, -131.0912])
             x_resize = x_resize[..., ::-1]  # RGB to BGR
             x_preprocessed = x_resize + vggface_mean
             return x_preprocessed
