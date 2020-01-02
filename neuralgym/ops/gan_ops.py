@@ -83,8 +83,8 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def gan_identity_loss(FLAGS, complete, ref, model):
-    with tf.variable_scope("identity_loss"):
+def gan_identity_loss(complete, ref, model, name="gan_identity_loss"):
+    with tf.variable_scope(name):
         def preprocess_input(x):
             x = (x + 1.) * 127.5  # Normalize to 0...255
             x_resize = tf.image.resize_images(x, [224, 224])
@@ -102,7 +102,10 @@ def gan_identity_loss(FLAGS, complete, ref, model):
         batch_similarity += FLAGS.identity_layer_weight[1] * K.mean(K.square(fake_feat28 - real_feat28))
         batch_similarity += FLAGS.identity_layer_weight[2] * K.mean(K.square(fake_feat55 - real_feat55))
 
-        return FLAGS.identity_loss_alpha * tf.reduce_mean(batch_similarity)
+        identity_loss = tf.reduce_mean(batch_similarity)
+        scalar_summary('identity_loss', identity_loss)
+
+        return identity_loss
 
 
 def random_interpolates(x, y, alpha=None, dtype=tf.float32):
