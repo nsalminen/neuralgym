@@ -83,7 +83,7 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def gan_identity_loss(complete, ref, model, name="gan_identity_loss"):
+def gan_identity_loss(FLAGS, complete, ref, model, name="gan_identity_loss"):
     with tf.variable_scope(name):
         def preprocess_input(x):
             x = (x + 1.) * 127.5  # Normalize to 0...255
