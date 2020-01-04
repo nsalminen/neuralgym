@@ -93,17 +93,13 @@ def gan_identity_loss(FLAGS, complete, ref, model, name="gan_identity_loss"):
             x_preprocessed = x_resize + vggface_mean
             return x_preprocessed
 
-        batch_similarity = 0.0
+        embedding_complete = model(preprocess_input(complete))
+        embedding_ref = model(preprocess_input(ref))
 
-        real_feat55, real_feat28, real_feat7 = model(preprocess_input(complete))
-        fake_feat55, fake_feat28, fake_feat7 = model(preprocess_input(ref))
-
-        batch_similarity += FLAGS.identity_layer_weight[0] * K.mean(K.square(fake_feat7 - real_feat7))
-        batch_similarity += FLAGS.identity_layer_weight[1] * K.mean(K.square(fake_feat28 - real_feat28))
-        batch_similarity += FLAGS.identity_layer_weight[2] * K.mean(K.square(fake_feat55 - real_feat55))
-
-        identity_loss = tf.reduce_mean(batch_similarity)
-        scalar_summary('identity_loss', identity_loss)
+        identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
+                                                  tf.nn.l2_normalize(embedding_ref, 0),
+                                                  axis=0)
+        scalar_summary('identity_loss_scalar', identity_loss)
 
         return identity_loss
 
