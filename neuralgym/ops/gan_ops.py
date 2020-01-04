@@ -98,7 +98,7 @@ def gan_identity_loss(FLAGS, complete, ref, model, name="gan_identity_loss"):
 
         identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
                                                   tf.nn.l2_normalize(embedding_ref, 0),
-                                                  axis=0)
+                                                  axis=0) * FLAGS.identity_loss_alpha
         scalar_summary('identity_loss_scalar', identity_loss)
 
         return identity_loss
