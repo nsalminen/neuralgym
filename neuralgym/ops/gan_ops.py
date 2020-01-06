@@ -4,6 +4,7 @@ from keras import Model
 import numpy as np
 
 from .summary_ops import scalar_summary
+from ..utils import warning_log
 
 
 def gan_log_loss(pos, neg, name='gan_log_loss'):
@@ -99,6 +100,11 @@ def gan_identity_loss(FLAGS, complete, ref, model, name="gan_identity_loss"):
         identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
                                                   tf.nn.l2_normalize(embedding_ref, 0),
                                                   axis=0) * FLAGS.identity_loss_alpha
+
+        if tf.math.is_nan(identity_loss):
+            warning_log("Identity loss is NaN")
+            identity_loss = 1.
+
         scalar_summary('identity_loss_scalar', identity_loss)
 
         return identity_loss
