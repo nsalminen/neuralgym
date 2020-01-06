@@ -2,6 +2,7 @@ import tensorflow as tf
 from keras import backend as K
 from keras import Model
 import numpy as np
+from tensorflow.python.ops.losses.losses_impl import Reduction
 
 from .summary_ops import scalar_summary
 from ..utils import warning_log
@@ -84,7 +85,7 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def gan_identity_loss(FLAGS, complete, ref, model, name="gan_identity_loss"):
+def gan_identity_loss(complete, ref, model, name="gan_identity_loss"):
     with tf.variable_scope(name):
         def preprocess_input(x):
             x = (x + 1.) * 127.5  # Normalize to 0...255
@@ -99,11 +100,7 @@ def gan_identity_loss(FLAGS, complete, ref, model, name="gan_identity_loss"):
 
         identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
                                                   tf.nn.l2_normalize(embedding_ref, 0),
-                                                  axis=0) * FLAGS.identity_loss_alpha
-
-        if tf.math.is_nan(identity_loss):
-            warning_log("Identity loss is NaN")
-            identity_loss = 1.
+                                                  axis=0, reduction=Reduction.MEAN)
 
         scalar_summary('identity_loss_scalar', identity_loss)
 
