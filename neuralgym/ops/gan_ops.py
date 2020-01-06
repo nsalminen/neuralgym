@@ -2,6 +2,7 @@ import tensorflow as tf
 from keras import backend as K
 from keras import Model
 import numpy as np
+from keras_vggface.vggface import VGGFace
 from tensorflow.python.ops.losses.losses_impl import Reduction
 
 from .summary_ops import scalar_summary
@@ -85,8 +86,13 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def gan_identity_loss(complete, ref, model, name="gan_identity_loss"):
+def gan_identity_loss(complete, ref, name="gan_identity_loss"):
     with tf.variable_scope(name):
+        model = VGGFace(model='resnet50',
+                        include_top=False,
+                        input_shape=(224, 224, 3))
+        model.trainable = False
+
         def preprocess_input(x):
             x = tf.clip_by_value((x + 1.) * 127.5, 0, 255)  # Normalize to 0...255
             x_resize = tf.image.resize_images(x, [224, 224])
