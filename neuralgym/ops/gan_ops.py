@@ -2,11 +2,16 @@ import tensorflow as tf
 from keras import backend as K
 from keras import Model
 import numpy as np
+from keras.utils.data_utils import get_file
 from keras_vggface.vggface import VGGFace
 from tensorflow.python.ops.losses.losses_impl import Reduction
 
 from .summary_ops import scalar_summary
 from ..utils import warning_log
+
+
+RESNET50_WEIGHTS_PATH_NO_TOP = 'https://github.com/rcmalli/keras-vggface/releases/download/v2.0/rcmalli_vggface_tf_notop_resnet50.h5'
+VGGFACE_DIR = 'models/vggface'
 
 
 def gan_log_loss(pos, neg, name='gan_log_loss'):
@@ -92,6 +97,10 @@ def gan_identity_loss(complete, ref, name="gan_identity_loss"):
                         include_top=False,
                         input_shape=(224, 224, 3))
         model.trainable = False
+        weights_path = get_file('rcmalli_vggface_tf_notop_resnet50.h5',
+                                RESNET50_WEIGHTS_PATH_NO_TOP,
+                                cache_subdir=VGGFACE_DIR)
+        model.load_weights(weights_path)
 
         def preprocess_input(x):
             x = tf.clip_by_value((x + 1.) * 127.5, 0, 255)  # Normalize to 0...255
@@ -101,13 +110,23 @@ def gan_identity_loss(complete, ref, name="gan_identity_loss"):
             x_preprocessed = x_resize + vggface_mean
             return x_preprocessed
 
-        embedding_complete = model(preprocess_input(complete))
-        embedding_ref = model(preprocess_input(ref))
+        complete_preprocessed = preprocess_input(complete)
+        ref_preprocessed = preprocess_input(ref)
+
+        embedding_complete = model(complete_preprocessed)
+        embedding_ref = model(ref_preprocessed)
 
         identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
                                                   tf.nn.l2_normalize(embedding_ref, 0),
                                                   axis=0, reduction=Reduction.MEAN)
 
+        scalar_summary('embedding_l1', tf.reduce_mean(tf.abs(embedding_complete - embedding_ref)))
+        scalar_summary('embedding_l2', tf.reduce_mean(tf.square(embedding_complete - embedding_ref)))
+        scalar_summary('image_l1', tf.reduce_mean(tf.abs(embedding_complete - embedding_ref)))
+        scalar_summary('complete_pixel0', complete[0, 112, 112, 0])
+        scalar_summary('ref_pixel0', ref[0, 112, 112, 0])
+        scalar_summary('pre_complete_pixel0', complete_preprocessed[0, 112, 112, 0])
+        scalar_summary('pre_ref_pixel0', ref_preprocessed[0, 112, 112, 0])
         scalar_summary('identity_loss_scalar', identity_loss)
 
         return identity_loss
