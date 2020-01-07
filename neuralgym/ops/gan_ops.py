@@ -7,7 +7,6 @@ from tensorflow.python.ops.losses.losses_impl import Reduction
 from .summary_ops import scalar_summary
 from ..utils import warning_log
 
-
 def gan_log_loss(pos, neg, name='gan_log_loss'):
     """
     log loss function for GANs.
@@ -85,7 +84,7 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def gan_identity_loss(complete, ref, model, name="gan_identity_loss"):
+def gan_identity_loss(model, complete, ref, name="gan_identity_loss"):
     with tf.variable_scope(name):
         def preprocess_input(x):
             x = tf.clip_by_value((x + 1.) * 127.5, 0, 255)  # Normalize to 0...255
@@ -95,8 +94,11 @@ def gan_identity_loss(complete, ref, model, name="gan_identity_loss"):
             x_preprocessed = x_resize + vggface_mean
             return x_preprocessed
 
-        embedding_complete = model(preprocess_input(complete))
-        embedding_ref = model(preprocess_input(ref))
+        complete_preprocessed = preprocess_input(complete)
+        ref_preprocessed = preprocess_input(ref)
+
+        embedding_complete = model(complete_preprocessed)
+        embedding_ref = model(ref_preprocessed)
 
         identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
                                                   tf.nn.l2_normalize(embedding_ref, 0),
