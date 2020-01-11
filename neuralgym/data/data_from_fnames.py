@@ -21,7 +21,7 @@ class DataFromFNames(Dataset):
         fnamelists (list): A list of filenames or tuple of filenames, e.g.
             ['image_001.png', ...] or
             [('pair_image_001_0.png', 'pair_image_001_1.png'), ...].
-        shapes (tuple): Shapes of data, e.g. [256, 256, 3] or
+        shapes (tuple or list): Shapes of data, e.g. [256, 256, 3] or
             [[256, 256, 3], [1]].
         random (bool): Read from `fnamelists` randomly (default to False).
         random_crop (bool): If random crop to the shape from raw image or

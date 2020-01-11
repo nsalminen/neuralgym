@@ -84,7 +84,7 @@ def gan_wgan_loss(pos, neg, name='gan_wgan_loss'):
     return g_loss, d_loss
 
 
-def gan_identity_loss(model, complete, ref, name="gan_identity_loss"):
+def gan_identity_loss(model, complete, ref, layer_alpha, name="gan_identity_loss"):
     with tf.variable_scope(name):
         def preprocess_input(x):
             x = tf.clip_by_value((x + 1.) * 127.5, 0, 255)  # Normalize to 0...255
@@ -97,12 +97,15 @@ def gan_identity_loss(model, complete, ref, name="gan_identity_loss"):
         complete_preprocessed = preprocess_input(complete)
         ref_preprocessed = preprocess_input(ref)
 
-        embedding_complete = model(complete_preprocessed)
-        embedding_ref = model(ref_preprocessed)
+        complete_add_1, complete_add_3, complete_add_7, complete_add_16 = model(complete_preprocessed)
+        ref_add_1, ref_add_3, ref_add_7, ref_add_16 = model(ref_preprocessed)
 
-        identity_loss = tf.losses.cosine_distance(tf.nn.l2_normalize(embedding_complete, 0),
-                                                  tf.nn.l2_normalize(embedding_ref, 0),
-                                                  axis=0, reduction=Reduction.MEAN)
+        similarity_add_1 = layer_alpha[0] * tf.reduce_mean(tf.square(complete_add_1 - ref_add_1))
+        similarity_add_3 = layer_alpha[1] * tf.reduce_mean(tf.square(complete_add_3 - ref_add_3))
+        similarity_add_7 = layer_alpha[2] * tf.reduce_mean(tf.square(complete_add_7 - ref_add_7))
+        similarity_add_16 = layer_alpha[3] * tf.reduce_mean(tf.square(complete_add_16 - ref_add_16))
+
+        identity_loss = tf.reduce_mean(similarity_add_16 + similarity_add_7 + similarity_add_3 + similarity_add_1)
 
         scalar_summary('identity_loss_scalar', identity_loss)
 
