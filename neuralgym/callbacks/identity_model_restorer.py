@@ -20,5 +20,6 @@ class IdentityModelRestorer(OnceCallback):
         self._tf_checkpoint_path = tf_checkpoint_path
 
     def run(self, sess):
-        tf.train.Saver(self._model_weights).restore(sess, self._tf_checkpoint_path)
-        callback_log('Trigger identity model weights loader: weights restored from %s.' % self._tf_checkpoint_path)
+        if self._model_weights is not None:
+            tf.train.Saver(self._model_weights).restore(sess, self._tf_checkpoint_path)
+            callback_log('Trigger identity model weights loader: weights restored from %s.' % self._tf_checkpoint_path)
