@@ -182,7 +182,7 @@ class DataFromFNames(Dataset):
                             img, tuple(self.shapes[i][:-1]),
                             random_h, random_w, align=False)  # use last rand
                     else:
-                        img = cv2.resize(img, tuple(self.shapes[i][:-1][::-1]))
+                        img = cv2.resize(img, tuple(self.shapes[i][:-1][::-1]), interpolation=cv2.INTER_NEAREST)
                     imgs.append(img)
             if self.return_fnames:
                 batch_data.append(imgs + list(filenames))
